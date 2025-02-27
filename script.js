@@ -28,11 +28,11 @@ d3.csv("national_health_data_2024.csv").then(function(data) {
     // Color Mapping for Histogram Attributes
     let histogramColors = {
         "poverty_perc": "#1f77b4", // Blue
-        "median_household_income": "#a1d99b", // light green
-        "elderly_percentage": "#17becf", // Cyan
-        "percent_no_heath_insurance": "#FF7F50", // orange
-        "percent_stroke": "#9467bd", // Purple
-        "percent_coronary_heart_disease": "#a07949" // Brown
+        "median_household_income": "#5aae61", // light green
+        "elderly_percentage": "#807dba", // light purple
+        "percent_no_heath_insurance": "#9467bd", // other purple
+        "percent_stroke": "rgb(231, 155, 132)", // light orange
+        "percent_coronary_heart_disease": "#bf812d" // light Brown
     };
     
     // Tooltip for Histogram
@@ -44,6 +44,7 @@ d3.csv("national_health_data_2024.csv").then(function(data) {
         .style("border", "1px solid #ccc")
         .style("border-radius", "5px")
         .style("visibility", "hidden");
+
     function createHistogram() {
         d3.select("#histogram").select("svg").remove(); // Clear previous histogram
         let svg = d3.select("#histogram").append("svg")
@@ -51,8 +52,9 @@ d3.csv("national_health_data_2024.csv").then(function(data) {
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
+            
         // **Filter the data to only selected counties (or show all if none selected)**
-    let filteredData = data.filter(d => selectedCounties.size === 0 || selectedCounties.has(d.cnty_fips));
+        let filteredData = data.filter(d => selectedCounties.size === 0 || selectedCounties.has(d.cnty_fips));
         let x = d3.scaleLinear().domain(d3.extent(data, d => d[currentHistogramAttribute])).range([0, width]);
         let histogram = d3.histogram().domain(x.domain()).thresholds(x.ticks(20)).value(d => d[currentHistogramAttribute]);
         let bins = histogram(filteredData);
