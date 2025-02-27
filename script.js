@@ -60,31 +60,79 @@ d3.csv("national_health_data_2024.csv").then(function(data) {
         let bins = histogram(filteredData);
         let y = d3.scaleLinear().domain([0, d3.max(bins, d => d.length)]).range([height, 0]);
         let barColor = histogramColors[currentHistogramAttribute] || "steelblue"; // Get color dynamically
-        svg.selectAll("rect")
-            .data(bins)
-            .enter().append("rect")
-            .attr("x", d => x(d.x0))
-            .attr("y", d => y(d.length))
-            .attr("width", d => x(d.x1) - x(d.x0) - 1)
-            .attr("height", d => height - y(d.length))
-            .attr("fill", barColor) // set dynamic color
-            .on("mouseover", function(event, d) {
-                d3.select(this).attr("fill", "#ff7f0e"); // highlight color on hover
-                let percentage = ((d.length / data.length) * 100).toFixed(2);
-                histogramTooltip.style("visibility", "visible")
-                    .html(`<strong>Range:</strong> ${d.x0.toFixed(2)} - ${d.x1.toFixed(2)}<br>
-                           <strong>Count:</strong> ${d.length}<br>
-                           <strong>Percentage:</strong> ${percentage}% of total`)
-                    .style("left", (event.pageX + 10) + "px")
-                    .style("top", (event.pageY - 10) + "px");
-            })
-            .on("mousemove", event => histogramTooltip.style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 10) + "px"))
-            .on("mouseout", function() {
-                d3.select(this).attr("fill", barColor); // reset color on mouseout
-                histogramTooltip.style("visibility", "hidden");
-            });
-        svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
-        svg.append("g").call(d3.axisLeft(y));
+         // Create tooltip
+    let histogramTooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("position", "absolute")
+    .style("background", "#fff")
+    .style("padding", "8px")
+    .style("border", "1px solid #ccc")
+    .style("border-radius", "5px")
+    .style("visibility", "hidden")
+    .style("pointer-events", "none");
+    let bars = svg.selectAll("rect")
+    .data(bins);
+
+    // **ENTER + UPDATE phase: Fade effect & tooltip**
+    bars.enter()
+    .append("rect")
+    .merge(bars) // Merge with update selection
+    .on("mouseover", function(event, d) {
+        d3.select(this).attr("fill", "#ff7f0e"); // Highlight on hover
+        let percentage = ((d.length / data.length) * 100).toFixed(2);
+        histogramTooltip.style("visibility", "visible")
+            .html(`<strong>Range:</strong> ${d.x0.toFixed(2)} - ${d.x1.toFixed(2)}<br>
+                   <strong>Count:</strong> ${d.length}<br>
+                   <strong>Percentage:</strong> ${percentage}% of total`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 10) + "px");
+    })
+    .on("mousemove", event => {
+        histogramTooltip.style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 10) + "px");
+    })
+    .on("mouseout", function() {
+        d3.select(this).attr("fill", barColor); // Reset color
+        histogramTooltip.style("visibility", "hidden");
+    })
+    .transition().duration(1500)
+    .attr("x", d => x(d.x0))
+    .attr("y", d => y(d.length))
+    .attr("width", d => x(d.x1) - x(d.x0) - 1)
+    .attr("height", d => height - y(d.length))
+    .attr("fill", barColor);
+
+    // **EXIT phase: Remove bars smoothly**
+    bars.exit()
+    .transition().duration(300)
+    .style("opacity", 0)
+    .remove();
+
+    // Append X-axis
+    svg.append("g")
+    .attr("transform", `translate(0,${height})`)
+    .call(d3.axisBottom(x));
+
+    // Append Y-axis
+    svg.append("g")
+    .call(d3.axisLeft(y));
+
+    // Add X-axis label
+    svg.append("text")
+    .attr("x", width / 2)
+    .attr("y", height + 40)
+    .attr("text-anchor", "middle")
+    .text(attributeLabels[currentHistogramAttribute]);
+
+    // Add Y-axis label
+    svg.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -height / 2)
+    .attr("y", -50)
+    .attr("text-anchor", "middle")
+    .text("Frequency");
+
+
         d3.select("#histogram-brush").select("svg").remove();
          // ** Brushing for Histogram **
          let brush = d3.brushX()
@@ -137,42 +185,74 @@ d3.csv("national_health_data_2024.csv").then(function(data) {
             .style("border", "1px solid #ccc")
             .style("border-radius", "5px")
             .style("visibility", "hidden");
-        svg.selectAll("circle")
-            .data(scatterData)
-            .enter().append("circle")
-            .attr("cx", d => xScale(d[attr1]))
-            .attr("cy", d => yScale(d[attr2]))
-            .attr("r", 4)
-            .attr("fill", scatterColor) // set dynamic color
-            .on("mouseover", function(event, d) {
-                d3.select(this).attr("fill", "#ff7f0e").attr("r", 6); // Highlight color and increase size
-                scatterTooltip.style("visibility", "visible")
-                    .html(`<strong>${d.display_name}</strong><br>${attr1.replace("_", " ")}: ${d[attr1]}<br>Income: $${d[attr2]}`)
-                    .style("left", (event.pageX + 10) + "px")
-                    .style("top", (event.pageY - 10) + "px");
-            })
-            .on("mousemove", event => scatterTooltip.style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 10) + "px"))
-            .on("mouseout", function() {
-                d3.select(this).attr("fill", scatterColor).attr("r", 4); // Reset color and size on mouseout
-                scatterTooltip.style("visibility", "hidden");
-            });
-        svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(xScale));
-        svg.append("g").call(d3.axisLeft(yScale));
-        // Add X-axis label
-        svg.append("text")
+
+        let circles = svg.selectAll("circle")
+        .data(scatterData);
+
+    // **ENTER + UPDATE phase: Smooth transition for points**
+    circles.enter()
+        .append("circle")
+        .merge(circles) // Merge enter and update selections
+        .on("mouseover", function(event, d) {
+            d3.select(this)
+                .attr("fill", "#ff7f0e")
+                .attr("r", 6); // Highlight color and increase size
+
+            scatterTooltip.style("visibility", "visible")
+                .html(`<strong>${d.display_name}</strong><br>
+                       <strong>${attributeLabels[attr1]}:</strong> ${d[attr1]}<br>
+                       <strong>${attributeLabels[attr2]}:</strong> ${d[attr2]}`)
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 10) + "px");
+        })
+        .on("mousemove", event => {
+            scatterTooltip.style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 10) + "px");
+        })
+        .on("mouseout", function() {
+            d3.select(this)
+                .attr("fill", scatterColor)
+                .attr("r", 4); // Reset color and size on mouseout
+            scatterTooltip.style("visibility", "hidden");
+        })
+        .transition().duration(1500) // Smooth transition effect
+        .attr("cx", d => xScale(d[attr1]))
+        .attr("cy", d => yScale(d[attr2]))
+        .attr("r", 4)
+        .attr("fill", scatterColor);
+
+    // **EXIT phase: Remove points smoothly**
+    circles.exit()
+        .transition().duration(500)
+        .attr("r", 0)
+        .style("opacity", 0)
+        .remove();
+
+    // Append X-axis
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(xScale));
+
+    // Append Y-axis
+    svg.append("g")
+        .call(d3.axisLeft(yScale));
+
+    // Add X-axis label
+    svg.append("text")
         .attr("x", width / 2)
         .attr("y", height + 40)
         .attr("text-anchor", "middle")
-        .text(attributeLabels[attr1]); // Dynamic label
-         // Add Y-axis label
-       svg.append("text")
-       .attr("transform", "rotate(-90)")
-       .attr("x", -height / 2)
-       .attr("y", -50)
-       .attr("text-anchor", "middle")
-       .attr("id", "scatterplot-y-label") // Add ID to update it later
+        .text(attributeLabels[attr1]);
+
+    // Add Y-axis label
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -50)
+        .attr("text-anchor", "middle")
+        .attr("id", "scatterplot-y-label") // Add ID to update it later
         .text(attributeLabels[attr2]);
-    }
+}
     function updateAllVisualizations() {
         createHistogram();
         createScatterplot();
