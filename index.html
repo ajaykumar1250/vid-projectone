@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Health Data Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="topojson.v3.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>National Health Data Dashboard</h1>
+    <h2>By: Ajay Kumar Kodaikal</h2>
+    <h2>Libraries used: D3</h2>
+    
+    <!-- Dropdown for selecting the attribute for all visualizations -->
+    <label for="histogram-selector">Select Attribute for the Visualizations:</label>
+    <select id="histogram-selector">
+        <option value="poverty_perc">Poverty Percentage</option>
+        <option value="median_household_income">Median Household Income</option>
+        <option value="elderly_percentage">Elderly Percentage</option>
+        <option value="percent_no_heath_insurance">Percent Without Health Insurance</option>
+        <option value="percent_stroke">Stroke Percent</option>
+        <option value="percent_coronary_heart_disease">Heart Disease Percent</option>
+    </select>
+    <!-- Dropdown for selecting the Y-axis of the scatterplot -->
+    <label for="scatterplot-y-selector">Select Y-Axis for Scatterplot:</label>
+    <select id="scatterplot-y-selector">
+        <option value="median_household_income">Median Household Income</option>
+        <option value="poverty_perc">Poverty Percentage</option>
+        <option value="elderly_percentage">Elderly Percentage</option>
+        <option value="percent_no_heath_insurance">Percent Without Health Insurance</option>
+        <option value="percent_stroke">Stroke Percent</option>
+        <option value="percent_coronary_heart_disease">Heart Disease Percent</option>
+    </select>
+    <!-- Main chart container -->
+    <div class="chart-container">
+        <!-- Histogram and scatterplot -->
+        <div id="histogram"></div>
+        <div id="scatterplot"></div>
+    </div>
+    <!-- Brush area ABOVE choropleth map -->
+    <h3 style="text-align: center;">Brush Area: select the part of the histogram to update all visualizations with those counties (width wise)</h3>
+    <div id="histogram-brush"></div>
+
+    <button id="reset-button">Reset</button>
+
+    <!-- Choropleth map container -->
+    <div id="choropleth-map-container">
+        <svg id="choropleth-map"></svg>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
