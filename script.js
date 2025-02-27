@@ -203,6 +203,10 @@ d3.csv("national_health_data_2024.csv").then(function(data) {
             .text(attributeLabels[currentMapAttribute]);
         // **Apply filtering - Only show selected counties if any are selected**
         let filteredData = data.filter(d => selectedCounties.size === 0 || selectedCounties.has(d.cnty_fips));
+        // **Fix: Ensure `colorScale` is properly defined BEFORE using it**
+        const colorScale = d3.scaleSequential()
+            .domain(d3.extent(data, d => d[currentMapAttribute])) 
+            .interpolator(d3.interpolateRgb("#ffffff", mapColor)); // Fix gradient scaling
         function updateMap() {
             const colorScale = d3.scaleSequential().domain(d3.extent(data, d => d[currentMapAttribute])).interpolator(d3.interpolateRgb("#ffffff", mapColor));
             mapSvg.selectAll("path")
@@ -242,8 +246,10 @@ d3.csv("national_health_data_2024.csv").then(function(data) {
         //     currentMapAttribute = currentHistogramAttribute;//this.value;
         //     updateMap();
         // });
+        updateLegend(colorScale, d3.extent(data, d => d[currentMapAttribute]));
     });
 }
+
     d3.select("#histogram-selector").on("change", function() {
         currentHistogramAttribute = this.value;
         currentMapAttribute = this.value;
@@ -263,6 +269,79 @@ d3.csv("national_health_data_2024.csv").then(function(data) {
 d3.select("#reset-button").on("click", function() {
     location.reload(); // Refresh the page
 });
+
+function updateLegend(colorScale, domain) {
+    d3.select("#map-legend").selectAll("*").remove(); // Clear previous legend
+
+    console.log("Updating legend with domain:", domain);
+    console.log("Color at min:", colorScale(domain[0]));
+    console.log("Color at max:", colorScale(domain[1]));
+
+    // Ensure valid domain values before proceeding
+    if (!domain || domain[0] === undefined || domain[1] === undefined) {
+        console.error("Invalid domain for legend:", domain);
+        return;
+    }
+
+    const legendWidth = 300, legendHeight = 20;
+    
+ // Create or update the SVG inside the centered legend container
+ let legendSvg = d3.select("#map-legend")
+ .selectAll("svg")
+ .data([null])
+ .join("svg")
+ .attr("width", legendWidth)
+ .attr("height", 100)
+ .append("g")
+ .attr("transform", "translate(10,30)");
+
+// **Create Gradient for Legend**
+const defs = legendSvg.append("defs");
+const linearGradient = defs.append("linearGradient")
+ .attr("id", "legend-gradient");
+
+linearGradient.selectAll("stop").remove(); // Clear old stops
+
+linearGradient.selectAll("stop")
+ .data([
+     { offset: "0%", color: colorScale(domain[0]) || "#ffffff" },
+     { offset: "100%", color: colorScale(domain[1]) || "#000000" }
+ ])
+ .enter().append("stop")
+ .attr("offset", d => d.offset)
+ .attr("stop-color", d => d.color);
+
+// **Append the legend rectangle**
+legendSvg.append("rect")
+ .attr("width", legendWidth)
+ .attr("height", legendHeight)
+ .style("fill", "url(#legend-gradient)")
+ .attr("stroke", "#ccc")
+ .attr("stroke-width", 1);
+
+// **Append min and max values**
+legendSvg.append("text")
+ .attr("x", 0)
+ .attr("y", 35)
+ .attr("font-size", "12px")
+ .text(domain[0].toFixed(1));
+
+legendSvg.append("text")
+ .attr("x", legendWidth)
+ .attr("y", 35)
+ .attr("text-anchor", "end")
+ .attr("font-size", "12px")
+ .text(domain[1].toFixed(1));
+
+// **Legend Title**
+legendSvg.append("text")
+ .attr("x", legendWidth / 2)
+ .attr("y", -5)
+ .attr("text-anchor", "middle")
+ .attr("font-size", "14px")
+ .attr("font-weight", "bold")
+ .text("Color Legend");
+}
 
 
     updateAllVisualizations();

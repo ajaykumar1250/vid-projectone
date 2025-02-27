@@ -95,3 +95,19 @@ select {
     font-size: 14px;
     color: #333;
 }
+
+#map-legend-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+#map-legend {
+   height: 100px;
+}
+
+#map-legend svg {
+    display: block;
+    margin-top: 10px;
+}
+
