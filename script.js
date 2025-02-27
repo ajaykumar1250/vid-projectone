@@ -1,4 +1,3 @@
-
 d3.csv("national_health_data_2024.csv").then(function(data) {
     let attributes = ["poverty_perc", "median_household_income", "elderly_percentage", "percent_no_heath_insurance", "percent_stroke", "percent_coronary_heart_disease"];
     let currentHistogramAttribute = "poverty_perc"; // Default histogram attribute
@@ -60,7 +59,8 @@ d3.csv("national_health_data_2024.csv").then(function(data) {
         let bins = histogram(filteredData);
         let y = d3.scaleLinear().domain([0, d3.max(bins, d => d.length)]).range([height, 0]);
         let barColor = histogramColors[currentHistogramAttribute] || "steelblue"; // Get color dynamically
-         // Create tooltip
+
+    // Create tooltip
     let histogramTooltip = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("position", "absolute")
@@ -133,15 +133,15 @@ d3.csv("national_health_data_2024.csv").then(function(data) {
     .text("Frequency");
 
 
-        d3.select("#histogram-brush").select("svg").remove();
-         // ** Brushing for Histogram **
-         let brush = d3.brushX()
-         .extent([[0, 0], [width, 50]])
-         .on("end", function(event) {
-             if (!event.selection) return;
-             let [x0, x1] = event.selection.map(x.invert);
-             selectedCounties = new Set(data.filter(d => d[currentHistogramAttribute] >= x0 && d[currentHistogramAttribute] <= x1).map(d => d.cnty_fips));
-             updateAllVisualizations();
+    d3.select("#histogram-brush").select("svg").remove();
+    // ** Brushing for Histogram **
+    let brush = d3.brushX()
+    .extent([[0, 0], [width, 50]])
+    .on("end", function(event) {
+    if (!event.selection) return;
+    let [x0, x1] = event.selection.map(x.invert);
+    selectedCounties = new Set(data.filter(d => d[currentHistogramAttribute] >= x0 && d[currentHistogramAttribute] <= x1).map(d => d.cnty_fips));
+    updateAllVisualizations();
          });
 
      d3.select("#histogram-brush").append("svg")
@@ -324,10 +324,6 @@ d3.csv("national_health_data_2024.csv").then(function(data) {
             });
         }
         updateMap();
-        // d3.select("#map-selector").on("change", function() {
-        //     currentMapAttribute = currentHistogramAttribute;//this.value;
-        //     updateMap();
-        // });
         updateLegend(colorScale, d3.extent(data, d => d[currentMapAttribute]));
     });
 }
